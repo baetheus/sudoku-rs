@@ -1,0 +1,14 @@
+[package]
+name = "web"
+version = "0.1.0"
+authors = ["brandon <brandon@null.pub>"]
+edition = "2018"
+
+[dependencies]
+yew = "0.11.0"
+stdweb = "0.4.20"
+sudoku = "0.7.0"
+itertools =  "0.8.2"
+
+[build]
+target = "wasm32-unknown-unknown"
