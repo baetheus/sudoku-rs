@@ -12,6 +12,7 @@ struct Model {
     link: ComponentLink<Self>,
     board: Sudoku,
     selected: Option<usize>,
+    selected_value: Option<usize>,
     console: ConsoleService,
 }
 
@@ -41,12 +42,17 @@ impl Model {
 
         if let Ok(board) = Sudoku::from_bytes(board) {
             self.board = board;
+            self.selected_value = Some(guess as usize);
         }
     }
 
     fn select(&mut self, location: usize) {
         if location < 81 {
             self.selected = Some(location);
+            self.selected_value = match self.board.to_bytes()[location] {
+                0 => None,
+                v => Some(v as usize),
+            };
         } else {
             self.selected = None;
         }
@@ -59,7 +65,7 @@ impl Model {
     }
 
     fn view_square(&self, location: usize, guess: u8) -> Html {
-        let guess = match guess {
+        let label = match guess {
             0 => String::from("_"),
             v => v.to_string(),
         };
@@ -69,12 +75,22 @@ impl Model {
             None => false,
         };
 
-        let class = if selected { "ct-f0" } else { "" };
+        let selected = if selected { "ct-f0" } else { "" };
+        let related = if let Some(v) = self.selected_value {
+            if v == guess as usize {
+                "ct-a1"
+            } else {
+                ""
+            }
+        } else {
+            ""
+        };
+        let class = format!("{} {}", selected, related);
 
         html! {
             <>
                 <td class=class>
-                    <a onclick=self.link.callback(move |_| SudokuMessage::Select(location))>{ guess }</a>
+                    <a onclick=self.link.callback(move |_| SudokuMessage::Select(location))>{ label }</a>
                 </td>
                 { horz_spc(location) }
             </>
@@ -130,6 +146,9 @@ impl Model {
                     <td><button onclick=self.link.callback(|_| SudokuMessage::Guess(8))>{"8"}</button></td>
                     <td><button onclick=self.link.callback(|_| SudokuMessage::Guess(9))>{"9"}</button></td>
                 </tr>
+                <tr>
+                    <td colspan="3"><button onclick=self.link.callback(|_| SudokuMessage::Guess(0))>{"Clear"}</button></td>
+                </tr>
             </table>
         }
     }
@@ -152,6 +171,7 @@ impl Component for Model {
             link,
             board: Sudoku::from_str_line(SUDOKU_LINE).unwrap(),
             selected: None,
+            selected_value: None,
             console: ConsoleService::new(),
         }
     }
